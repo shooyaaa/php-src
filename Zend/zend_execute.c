@@ -533,7 +533,7 @@ static inline zval *_get_zval_ptr_ptr(int op_type, znode_op node, const zend_exe
 }
 
 static zend_always_inline zval *_get_obj_zval_ptr_unused(zend_execute_data *execute_data)
-{	
+{
 	return &EX(This);
 }
 
@@ -996,7 +996,7 @@ static ZEND_COLD void zend_verify_return_error(
 
 	zend_verify_type_error_common(
 		zf, arg_info, ce, value,
-		&fname, &fsep, &fclass, &need_msg, &need_kind, &need_or_null, &given_msg, &given_kind); 
+		&fname, &fsep, &fclass, &need_msg, &need_kind, &need_or_null, &given_msg, &given_kind);
 
 	zend_type_error("Return value of %s%s%s() must %s%s%s, %s%s returned",
 		fclass, fsep, fname, need_msg, need_kind, need_or_null, given_msg, given_kind);
@@ -1012,7 +1012,7 @@ static ZEND_COLD void zend_verify_internal_return_error(
 
 	zend_verify_type_error_common(
 		zf, arg_info, ce, value,
-		&fname, &fsep, &fclass, &need_msg, &need_kind, &need_or_null, &given_msg, &given_kind); 
+		&fname, &fsep, &fclass, &need_msg, &need_kind, &need_or_null, &given_msg, &given_kind);
 
 	zend_error_noreturn(E_CORE_ERROR, "Return value of %s%s%s() must %s%s%s, %s%s returned",
 		fclass, fsep, fname, need_msg, need_kind, need_or_null, given_msg, given_kind);
@@ -1059,7 +1059,7 @@ static zend_always_inline void zend_verify_return_type(zend_function *zf, zval *
 {
 	zend_arg_info *ret_info = zf->common.arg_info - 1;
 	zend_class_entry *ce = NULL;
-	
+
 	if (UNEXPECTED(!zend_check_type(zf, ret_info, ret, &ce, cache_slot, NULL, 1))) {
 		zend_verify_return_error(zf, ce, ret);
 	}
@@ -1348,6 +1348,15 @@ static zend_never_inline void zend_assign_to_string_offset(zval *str, zval *dim,
 		zend_string_forget_hash_val(Z_STR_P(str));
 	}
 
+    //lx add for upgrade to php 7 from php 5 ,empty string offset problem
+    zend_string *tmp1 = zval_get_string(str);
+    size_t str_len = ZSTR_LEN(tmp1);
+    zend_uchar *str_first_char = (zend_uchar)ZSTR_VAL(tmp1)[0];
+    if (str_len == 1 && str_first_char == '\0') {
+        zend_throw_error(NULL, "Log use string offset on empty one");
+    }
+    zend_string_release(tmp1);
+
 	Z_STRVAL_P(str)[offset] = c;
 
 	if (result) {
@@ -1411,7 +1420,7 @@ static zend_never_inline void zend_pre_incdec_overloaded_property(zval *object, 
 
 	if (Z_OBJ_HT_P(object)->read_property && Z_OBJ_HT_P(object)->write_property) {
 		zval *z, *zptr, obj;
-				
+
 		ZVAL_OBJ(&obj, Z_OBJ_P(object));
 		Z_ADDREF(obj);
 		zptr = z = Z_OBJ_HT(obj)->read_property(&obj, property, BP_VAR_R, cache_slot, &rv);
@@ -1615,7 +1624,7 @@ str_index:
 		switch (Z_TYPE_P(dim)) {
 			case IS_UNDEF:
 				zval_undefined_cv(EG(current_execute_data)->opline->op2.var, EG(current_execute_data));
-				/* break missing intentionally */				
+				/* break missing intentionally */
 			case IS_NULL:
 				offset_key = ZSTR_EMPTY_ALLOC();
 				goto str_index;
@@ -2001,7 +2010,7 @@ use_read_property:
 			ZVAL_INDIRECT(result, ptr);
 		}
 	} else if (EXPECTED(Z_OBJ_HT_P(container)->read_property)) {
-		goto use_read_property; 
+		goto use_read_property;
 	} else {
 		zend_error(E_WARNING, "This object doesn't support property references");
 		ZVAL_ERROR(result);
@@ -2370,7 +2379,7 @@ static void cleanup_unfinished_calls(zend_execute_data *execute_data, uint32_t o
 		zend_op *opline = EX(func)->op_array.opcodes + op_num;
 		int level;
 		int do_exit;
-		
+
 		if (UNEXPECTED(opline->opcode == ZEND_INIT_FCALL ||
 			opline->opcode == ZEND_INIT_FCALL_BY_NAME ||
 			opline->opcode == ZEND_INIT_NS_FCALL_BY_NAME ||
