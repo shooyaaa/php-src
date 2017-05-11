@@ -1296,6 +1296,13 @@ static zend_never_inline void zend_assign_to_string_offset(zval *str, zval *dim,
 	size_t string_len;
 	zend_long offset;
 
+    //lx add for upgrade to php 7 from php 5 ,empty string offset problem
+    zend_string *tmp1 = zval_get_string(str);
+    size_t str_len = ZSTR_LEN(tmp1);
+    if (str_len == 0) {
+        zend_throw_error(NULL, "Log use string offset on empty one");
+    }
+
 	offset = zend_check_string_offset(dim, BP_VAR_W);
 	if (offset < (zend_long)(-Z_STRLEN_P(str))) {
 		/* Error on negative offset */
@@ -1348,13 +1355,6 @@ static zend_never_inline void zend_assign_to_string_offset(zval *str, zval *dim,
 		zend_string_forget_hash_val(Z_STR_P(str));
 	}
 
-    //lx add for upgrade to php 7 from php 5 ,empty string offset problem
-    zend_string *tmp1 = zval_get_string(str);
-    size_t str_len = ZSTR_LEN(tmp1);
-    zend_uchar *str_first_char = (zend_uchar)ZSTR_VAL(tmp1)[0];
-    if (str_len == 1 && str_first_char == '\0') {
-        zend_throw_error(NULL, "Log use string offset on empty one");
-    }
     zend_string_release(tmp1);
 
 	Z_STRVAL_P(str)[offset] = c;
